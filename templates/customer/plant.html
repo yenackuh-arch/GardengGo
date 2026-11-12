@@ -1,0 +1,38 @@
+{% extends 'customer/base.html' %}
+{% from 'customer/_macros.html' import csrf %}
+{% block title %}{{ plant.name }} | GardenGo{% endblock %}
+{% block content %}
+  {% set s = stock_info(plant.stock_quantity) %}
+  {% set limit = max_qty(plant.stock_quantity) %}
+  <section class="section container">
+    <p class="crumbs"><a href="{{ url_for('shop.plants') }}">&larr; Back to all plants</a></p>
+    <article class="card detail">
+      <div class="detail-img">
+        {% if plant.image_path %}<img src="{{ image_src(plant.image_path) }}" alt="{{ plant.name }}">{% else %}<span class="img-placeholder" aria-hidden="true">&#127807;</span>{% endif %}
+        <span class="badge {{ s[0] }}">{{ s[1] }}</span>
+      </div>
+      <div class="detail-body">
+        <h1>{{ plant.name }}</h1>
+        <p class="tags"><span class="tag">{{ plant.category }}</span></p>
+        <p class="price big">{{ plant.price|peso }}</p>
+        <p>{{ plant.description }}</p>
+        <p class="muted">{% if limit < 1 %}Currently out of stock.{% else %}{{ plant.stock_quantity }} available. You can order up to {{ limit }} at a time.{% endif %}</p>
+        <form method="post" action="{{ url_for('shop.cart_add') }}">
+          {{ csrf() }}
+          <input type="hidden" name="plant_id" value="{{ plant.id }}">
+          <input type="hidden" name="next" value="{{ request.path }}">
+          <div class="qty-row"><span>Quantity</span>
+            <div class="qty">
+              <button type="button" data-step="-1" aria-label="Decrease quantity">&minus;</button>
+              <input type="number" name="qty" value="1" min="1" max="{{ [limit, 1]|max }}" aria-label="Quantity" {{ 'disabled' if limit < 1 }}>
+              <button type="button" data-step="1" aria-label="Increase quantity">+</button>
+            </div></div>
+          <div class="card-actions">
+            <button type="submit" class="btn btn-outline" {{ 'disabled' if limit < 1 }}>Add to Cart</button>
+            <button type="submit" class="btn" name="buy_now" value="1" {{ 'disabled' if limit < 1 }}>Order Now</button>
+          </div>
+        </form>
+      </div>
+    </article>
+  </section>
+{% endblock %}

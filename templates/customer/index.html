@@ -1,0 +1,41 @@
+{% extends 'customer/base.html' %}
+{% from 'customer/_macros.html' import plant_card %}
+{% block title %}GardenGo | Plants from Gripalda's Garden{% endblock %}
+{% block content %}
+  <section class="hero">
+    <div class="container hero-inner">
+      <div class="hero-text">
+        <div class="hero-logo"><img class="logo-img big" src="{{ url_for('static', filename='img/logo-96.png') }}" width="64" height="64" alt="Gripalda's Garden logo"> <span class="logo-text">Garden<b>Go</b></span></div>
+        <h1>Fresh plants from Gripalda's Garden, ordered in minutes.</h1>
+        <p>Welcome to GardenGo. Browse healthy, locally grown plants from Bay, Laguna and reserve yours online.</p>
+        <div class="hero-actions">
+          <a href="{{ url_for('shop.plants') }}" class="btn">Shop plants</a>
+          <a href="#about" class="btn btn-outline">About the garden</a>
+        </div>
+      </div>
+      <div class="hero-img"><img src="https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=900&q=80" alt="Green potted plants in a garden"></div>
+    </div>
+  </section>
+
+  <section class="section container">
+    <div class="section-head"><h2>Featured plants</h2><p>Newest plants in stock, ready for pickup or delivery.</p></div>
+    {% if featured %}
+    <div class="grid">{% for p in featured %}{{ plant_card(p) }}{% endfor %}</div>
+    {% else %}
+    <p class="center muted">Our plants are coming soon. Please check back later.</p>
+    {% endif %}
+    <p class="center"><a href="{{ url_for('shop.plants') }}" class="btn btn-outline">View all plants</a></p>
+  </section>
+
+  <section class="section alt" id="about">
+    <div class="container about">
+      <img src="https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?auto=format&fit=crop&w=800&q=80" alt="Plant nursery shelves">
+      <div>
+        <h2>About Gripalda's Garden</h2>
+        <p>Gripalda's Garden is a family-run plant nursery in Bay, Laguna, growing ornamental, indoor and flowering plants for local homes and gardens.</p>
+        <p>GardenGo moves the nursery online, so customers can check what is in stock, place an order, and get plants without waiting in line.</p>
+        <ul class="ticks"><li>Locally grown and hand-selected</li><li>Real-time stock status</li><li>Pickup and local delivery</li></ul>
+      </div>
+    </div>
+  </section>
+{% endblock %}

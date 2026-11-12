@@ -1,0 +1,35 @@
+{% extends 'admin/base.html' %}
+{% from 'admin/_macros.html' import pages_nav, empty %}
+{% block title %}Customers{% endblock %}
+{% block heading %}Customers{% endblock %}
+{% block content %}
+<p class="muted mb-3">View registered customers, their order history, and manage account status.</p>
+<section class="row g-3 mb-3" aria-label="Customer summary">
+  {% for label, value, icon, note in [('Registered customers', summary.total, 'bi-people', summary.active ~ ' active'), ('Deactivated', summary.deactivated, 'bi-person-x', 'Cannot log in or order')] %}
+  <div class="col-6 col-xl-3"><div class="stat-card"><span class="stat-icon"><i class="bi {{ icon }}"></i></span><div><p class="stat-label">{{ label }}</p><p class="stat-value">{{ value }}</p><p class="stat-note">{{ note }}</p></div></div></div>
+  {% endfor %}
+</section>
+<div class="panel mb-3">
+  <form method="get" action="{{ url_for('admin.customers') }}" class="toolbar toolbar-inv">
+    <div class="toolbar-search"><label for="q" class="visually-hidden">Search customers</label><i class="bi bi-search" aria-hidden="true"></i>
+      <input type="search" id="q" name="q" value="{{ q }}" class="form-control" placeholder="Search name, email, or city" maxlength="60"></div>
+    <div><label for="status" class="visually-hidden">Account status</label><select id="status" name="status" class="form-select" data-autosubmit>
+      {% for v, l in [('','All accounts'),('active','Active'),('deactivated','Deactivated')] %}<option value="{{ v }}" {{ 'selected' if status == v }}>{{ l }}</option>{% endfor %}</select></div>
+    <div><label for="sort" class="visually-hidden">Sort by</label><select id="sort" name="sort" class="form-select" data-autosubmit>
+      {% for v, l in [('name-asc','Name: A to Z'),('registered-desc','Newest accounts'),('registered-asc','Oldest accounts'),('spent-desc','Most spent')] %}<option value="{{ v }}" {{ 'selected' if sort == v }}>{{ l }}</option>{% endfor %}</select></div>
+  </form>
+</div>
+<div class="panel">
+  <p class="muted small mb-2">{{ pager.total }} customer{{ 's' if pager.total != 1 }} found</p>
+  <div class="table-responsive"><table class="table table-hover align-middle mb-0">
+    <thead><tr><th>Customer</th><th>City</th><th>Registered</th><th class="text-end">Orders</th><th class="text-end">Total spent</th><th>Account</th><th class="text-end">Action</th></tr></thead>
+    <tbody>{% for c in customers %}
+      <tr><td><div class="fw-semibold">{{ c.full_name }}</div><div class="muted small">{{ c.email }}</div></td><td>{{ c.city or '-' }}</td><td>{{ c.created_at|date_fmt }}</td>
+        <td class="text-end">{{ c.order_count }}</td><td class="text-end">{{ c.total_spent|peso }}</td>
+        <td><span class="status-badge {{ 'st-completed' if c.is_active else 'st-cancelled' }}">{{ 'Active' if c.is_active else 'Deactivated' }}</span></td>
+        <td class="text-end"><a class="btn btn-sm btn-outline-green" href="{{ url_for('admin.customer_detail', user_id=c.id) }}"><i class="bi bi-eye"></i> View</a></td></tr>
+    {% endfor %}</tbody></table></div>
+  {% if not customers %}{{ empty('No customers match your search.') }}{% endif %}
+  {{ pages_nav(pager, 'admin.customers') }}
+</div>
+{% endblock %}

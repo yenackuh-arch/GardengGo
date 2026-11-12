@@ -1,0 +1,24 @@
+{% extends 'customer/base.html' %}
+{% from 'customer/_macros.html' import csrf %}
+{% block title %}Register | GardenGo{% endblock %}
+{% block content %}
+  <section class="auth-wrap">
+    <div class="auth-card card">
+      <img class="auth-logo" src="{{ url_for('static', filename='img/logo.png') }}" width="112" height="112" alt="Gripalda's Garden logo">
+      <h1>Create your account</h1>
+      <p class="muted">Register to order plants and track your orders.</p>
+      <form method="post" action="{{ url_for('auth.register', next=request.args.get('next')) }}" novalidate>
+        {{ csrf() }}
+        <div class="field{{ ' invalid' if errors.name }}"><label for="name">Full name</label><input type="text" id="name" name="name" value="{{ values.name }}" autocomplete="name" maxlength="80"><small class="error">{{ errors.name or '' }}</small></div>
+        <div class="field{{ ' invalid' if errors.email }}"><label for="email">Email</label><input type="email" id="email" name="email" value="{{ values.email }}" autocomplete="email" maxlength="120"><small class="error">{{ errors.email or '' }}</small></div>
+        <div class="field{{ ' invalid' if errors.password }}"><label for="password">Password</label>
+          <div class="pw-wrap"><input type="password" id="password" name="password" autocomplete="new-password"><button type="button" class="pw-toggle" id="pwToggle" aria-label="Show password">Show</button></div>
+          <div class="strength" aria-hidden="true"><span id="strengthBar"></span></div><small class="hint" id="strengthText">Use 8 or more characters with letters and numbers.</small>
+          <small class="error">{{ errors.password or '' }}</small></div>
+        <div class="field{{ ' invalid' if errors.confirm_password }}"><label for="confirm_password">Confirm password</label><input type="password" id="confirm_password" name="confirm_password" autocomplete="new-password"><small class="error">{{ errors.confirm_password or '' }}</small></div>
+        <button type="submit" class="btn full" data-once>Create account</button>
+      </form>
+      <p class="switch">Already have an account? <a href="{{ url_for('auth.login', next=request.args.get('next')) }}">Log in</a></p>
+    </div>
+  </section>
+{% endblock %}

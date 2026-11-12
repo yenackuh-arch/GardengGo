@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="GardenGo - order plants online from Gripalda's Garden in Bay, Laguna.">
+  <title>{% block title %}GardenGo{% endblock %}</title>
+  <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='img/favicon-32.png') }}">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/apple-touch-icon.png') }}">
+  <meta name="theme-color" content="#1B5E20">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/customer.css') }}">
+  <script src="{{ url_for('static', filename='js/boot.js') }}"></script>
+</head>
+<body>
+{% set ep = request.endpoint or '' %}
+<header class="navbar">
+  <div class="container nav-inner">
+    <a href="{{ url_for('shop.home') }}" class="logo" aria-label="GardenGo home"><img class="logo-img" src="{{ url_for('static', filename='img/logo-96.png') }}" width="44" height="44" alt=""><span class="logo-text">Garden<b>Go</b></span></a>
+    <button class="nav-toggle" id="navToggle" type="button" aria-label="Toggle menu" aria-expanded="false">&#9776;</button>
+    <nav id="navMenu" aria-label="Main navigation">
+      <ul>
+        <li><a href="{{ url_for('shop.home') }}" class="{{ 'active' if ep == 'shop.home' }}">Home</a></li>
+        <li><a href="{{ url_for('shop.plants') }}" class="{{ 'active' if ep in ('shop.plants', 'shop.plant_detail') }}">Plants</a></li>
+        <li><a href="{{ url_for('account.my_orders') }}" class="{{ 'active' if ep in ('account.my_orders', 'account.order_details', 'account.confirmation') }}">My Orders</a></li>
+        <li><a href="{{ url_for('account.track') }}" class="{{ 'active' if ep == 'account.track' }}">Track Order</a></li>
+        {% if g.user and g.user.role == 'admin' %}
+        <li><a href="{{ url_for('admin.dashboard') }}">Admin panel</a></li>
+        <li><form method="post" action="{{ url_for('auth.logout') }}" class="nav-form"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="nav-logout">Logout</button></form></li>
+        {% elif g.user %}
+        <li><a href="{{ url_for('account.account') }}" class="{{ 'active' if ep == 'account.account' }}">{{ g.user.full_name.split(' ')[0] }}</a></li>
+        <li><form method="post" action="{{ url_for('auth.logout') }}" class="nav-form"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="nav-logout">Logout</button></form></li>
+        {% else %}
+        <li><a href="{{ url_for('auth.login') }}" class="{{ 'active' if ep == 'auth.login' }}">Login</a></li>
+        <li><a href="{{ url_for('auth.register') }}" class="btn btn-small {{ 'active' if ep == 'auth.register' }}">Register</a></li>
+        {% endif %}
+        <li><a href="{{ url_for('shop.cart') }}" class="cart-link {{ 'active' if ep == 'shop.cart' }}" aria-label="Cart">&#128722; Cart <span id="cartCount">{{ cart_count }}</span></a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+<div class="container flash-wrap" role="status">
+  {% for category, message in messages %}<div class="flash flash-{{ category }}">{{ message }}</div>{% endfor %}
+</div>
+{% endif %}
+{% endwith %}
+
+<main>
+{% block content %}{% endblock %}
+</main>
+
+<footer class="footer">
+  <div class="container footer-grid">
+    <div><a href="{{ url_for('shop.home') }}" class="logo light" aria-label="GardenGo home"><img class="logo-img" src="{{ url_for('static', filename='img/logo-96.png') }}" width="44" height="44" alt=""><span class="logo-text">Garden<b>Go</b></span></a>
+      <p>A web-based plant ordering system for Gripalda's Garden, Bay, Laguna.</p></div>
+    <div><h4>Explore</h4><ul><li><a href="{{ url_for('shop.home') }}">Home</a></li><li><a href="{{ url_for('shop.plants') }}">Plants</a></li><li><a href="{{ url_for('shop.cart') }}">Cart</a></li></ul></div>
+    <div><h4>Account</h4><ul>
+      {% if not g.user %}<li><a href="{{ url_for('auth.login') }}">Login</a></li><li><a href="{{ url_for('auth.register') }}">Register</a></li>{% endif %}
+      <li><a href="{{ url_for('account.my_orders') }}">My Orders</a></li><li><a href="{{ url_for('account.track') }}">Track Order</a></li></ul></div>
+    <div><h4>Visit us</h4><p>Gripalda's Garden<br>Bay, Laguna, Philippines<br>Open daily, 7:00 AM &ndash; 5:00 PM</p></div>
+  </div>
+  <p class="copyright">&copy; {{ now_year }} GardenGo &ndash; Final Project. All rights reserved.</p>
+</footer>
+<script src="{{ url_for('static', filename='js/customer.js') }}"></script>
+</body>
+</html>

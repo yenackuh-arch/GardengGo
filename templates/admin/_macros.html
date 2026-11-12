@@ -1,0 +1,25 @@
+{% macro csrf() %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endmacro %}
+
+{% macro status_badge(status) %}
+{% set cls = {'Pending':'st-pending','Confirmed':'st-confirmed','Processing':'st-processing','Ready for Pickup':'st-ready','Completed':'st-completed','Cancelled':'st-cancelled'}[status] %}
+<span class="status-badge {{ cls }}">{{ status }}</span>
+{% endmacro %}
+
+{% macro stock_pill(qty) %}
+{% set low = config.LOW_STOCK %}
+{% if qty == 0 %}<span class="stock-pill out">Out of stock</span>{% elif qty <= low %}<span class="stock-pill low">{{ qty }} (low)</span>{% else %}<span class="fw-semibold">{{ qty }}</span>{% endif %}
+{% endmacro %}
+
+{% macro pages_nav(p, endpoint) %}
+{% if p.pages > 1 %}
+<nav class="pager" aria-label="Pages">
+  {% if p.page > 1 %}<a href="{{ url_for(endpoint, **dict(request.args.to_dict(), page=p.page - 1)) }}">&laquo; Previous</a>{% endif %}
+  <span>Page {{ p.page }} of {{ p.pages }}</span>
+  {% if p.page < p.pages %}<a href="{{ url_for(endpoint, **dict(request.args.to_dict(), page=p.page + 1)) }}">Next &raquo;</a>{% endif %}
+</nav>
+{% endif %}
+{% endmacro %}
+
+{% macro empty(text) %}
+<div class="empty-msg"><p class="mb-1"><i class="bi bi-search"></i></p><p class="fw-semibold mb-1">{{ text }}</p><p class="muted mb-0">Try a different search, or clear the filters.</p></div>
+{% endmacro %}

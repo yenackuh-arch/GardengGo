@@ -1,0 +1,38 @@
+{% extends 'admin/base.html' %}
+{% from 'admin/_macros.html' import csrf, status_badge %}
+{% block title %}Order {{ order_code(order.id) }}{% endblock %}
+{% block heading %}Order {{ order_code(order.id) }}{% endblock %}
+{% block content %}
+<p class="mb-3"><a href="{{ url_for('admin.orders') }}">&larr; Back to orders</a></p>
+<div class="row g-3">
+  <section class="col-12 col-xl-8"><div class="panel">
+    <div class="panel-head"><h2>Items</h2>{{ status_badge(order.status) }}</div>
+    <div class="table-responsive"><table class="table table-sm align-middle mb-3">
+      <thead><tr><th>Plant</th><th class="text-end">Price</th><th class="text-end">Qty</th><th class="text-end">Line total</th></tr></thead>
+      <tbody>{% for i in order['items'] %}<tr><td>{{ i.plant_name }}</td><td class="text-end">{{ i.unit_price|peso }}</td><td class="text-end">{{ i.quantity }}</td><td class="text-end">{{ (D(i.unit_price) * i.quantity)|peso }}</td></tr>{% endfor %}</tbody></table></div>
+    <dl class="totals"><div><dt>Subtotal</dt><dd>{{ order.subtotal|peso }}</dd></div>
+      {% if D(order.delivery_fee) > 0 %}<div><dt>Delivery fee</dt><dd>{{ order.delivery_fee|peso }}</dd></div>{% endif %}
+      <div class="grand"><dt>Total</dt><dd>{{ order.total_amount|peso }}</dd></div></dl>
+    <p class="muted small mb-0">Prices are the prices at the time of purchase. Stock: {{ 'taken off when the order was placed' if order.stock_deducted else 'returned to inventory' }}.</p>
+  </div></section>
+  <section class="col-12 col-xl-4">
+    <div class="panel mb-3"><h2 class="h6 text-uppercase muted">Customer</h2>
+      <p class="mb-0"><a href="{{ url_for('admin.customer_detail', user_id=order.user_id) }}"><strong>{{ order.customer }}</strong></a><br>{{ order.email }}{% if not order.is_active %} <span class="status-badge st-cancelled">Deactivated</span>{% endif %}</p></div>
+    <div class="panel mb-3"><h2 class="h6 text-uppercase muted">Receiving</h2>
+      <p class="mb-0">Placed {{ order.created_at|dt_fmt }}<br>{{ 'Local delivery' if order.fulfillment == 'delivery' else 'Pickup at the garden' }}<br>{{ order.contact_name }}<br>{{ order.contact_phone }}<br>{{ order.address }}, {{ order.city }}, {{ order.province }}</p>
+      {% if order.notes %}<p class="muted small mt-2 mb-0">Notes: {{ order.notes }}</p>{% endif %}</div>
+    <div class="panel"><h2 class="h6 text-uppercase muted">Update status</h2>
+      {% if next_statuses %}
+      <form method="post" action="{{ url_for('admin.order_status', order_id=order.id) }}" class="status-form" id="statusForm">
+        {{ csrf() }}
+        <label for="status" class="visually-hidden">New status</label>
+        <select id="status" name="status" class="form-select">{% for s in next_statuses %}<option>{{ s }}</option>{% endfor %}</select>
+        <button type="submit" class="btn btn-green" data-once>Update</button>
+      </form>
+      {% if 'Cancelled' in next_statuses %}<p class="muted small mt-2 mb-0">Cancelling returns the plants to stock. This cannot be undone.</p>{% endif %}
+      {% if order.fulfillment == 'delivery' %}<p class="muted small mt-2 mb-0">For delivery orders, "Ready for Pickup" means the plants are packed and ready to be handed over for delivery.</p>{% endif %}
+      {% else %}<p class="muted mb-0">This order is {{ order.status|lower }}, so its status can no longer be changed.</p>{% endif %}
+    </div>
+  </section>
+</div>
+{% endblock %}

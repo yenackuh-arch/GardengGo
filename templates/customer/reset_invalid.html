@@ -1,0 +1,12 @@
+{% extends 'customer/base.html' %}
+{% block title %}Link not valid | GardenGo{% endblock %}
+{% block content %}
+  <section class="section container">
+    <div class="card cart-empty">
+      <p class="cart-empty-icon" aria-hidden="true">&#128274;</p>
+      <h1>This link is not valid</h1>
+      <p class="muted">The reset link may be too old, already used, or incomplete. Please ask for a new one.</p>
+      <p><a href="{{ url_for('auth.forgot_password') }}" class="btn">Send me a new link</a></p>
+    </div>
+  </section>
+{% endblock %}

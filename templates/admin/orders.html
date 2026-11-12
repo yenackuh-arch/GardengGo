@@ -1,0 +1,34 @@
+{% extends 'admin/base.html' %}
+{% from 'admin/_macros.html' import status_badge, pages_nav, empty %}
+{% block title %}Orders{% endblock %}
+{% block heading %}Orders{% endblock %}
+{% block content %}
+<p class="muted mb-3">View customer orders, check the items, and update the order status.</p>
+<div class="panel mb-3">
+  <form method="get" action="{{ url_for('admin.orders') }}" class="toolbar toolbar-orders">
+    <div class="toolbar-search"><label for="q" class="visually-hidden">Search by order ID or customer</label><i class="bi bi-search" aria-hidden="true"></i>
+      <input type="search" id="q" name="q" value="{{ q }}" class="form-control" placeholder="Search order ID or customer" maxlength="60"></div>
+    <div><label for="status" class="visually-hidden">Status</label><select id="status" name="status" class="form-select" data-autosubmit>
+      <option value="">All statuses</option>{% for s in statuses %}<option {{ 'selected' if status == s }}>{{ s }}</option>{% endfor %}</select></div>
+    <div class="date-field"><label for="from">From</label><input type="date" id="from" name="from" value="{{ date_from }}" class="form-control"></div>
+    <div class="date-field"><label for="to">To</label><input type="date" id="to" name="to" value="{{ date_to }}" class="form-control"></div>
+    <div class="d-flex gap-2"><button type="submit" class="btn btn-green">Filter</button><a href="{{ url_for('admin.orders') }}" class="btn btn-light">Clear</a></div>
+  </form>
+  {% if error %}<p class="text-danger small mb-0 mt-2" role="alert">{{ error }}</p>{% endif %}
+</div>
+<div class="panel">
+  <p class="muted small mb-2" aria-live="polite">{{ pager.total }} order{{ 's' if pager.total != 1 }} found</p>
+  <div class="table-responsive"><table class="table table-hover align-middle mb-0">
+    <thead><tr><th>Order ID</th><th>Customer</th><th>Date</th><th>Method</th><th class="text-end">Items</th><th class="text-end">Total</th><th>Status</th><th class="text-end">Action</th></tr></thead>
+    <tbody>
+    {% for o in orders %}
+      <tr><td class="fw-semibold">{{ order_code(o.id) }}</td><td>{{ o.customer }}<div class="muted small">{{ o.email }}</div></td><td>{{ o.created_at|date_fmt }}</td>
+        <td>{% if o.fulfillment == 'delivery' %}<i class="bi bi-truck"></i> Delivery{% else %}<i class="bi bi-bag"></i> Pickup{% endif %}</td>
+        <td class="text-end">{{ o.item_count|int }}</td><td class="text-end">{{ o.total_amount|peso }}</td><td>{{ status_badge(o.status) }}</td>
+        <td class="text-end"><a class="btn btn-sm btn-outline-green" href="{{ url_for('admin.order_detail', order_id=o.id) }}"><i class="bi bi-eye"></i> View</a></td></tr>
+    {% endfor %}
+    </tbody></table></div>
+  {% if not orders and not error %}{{ empty('No orders match your search.') }}{% endif %}
+  {{ pages_nav(pager, 'admin.orders') }}
+</div>
+{% endblock %}

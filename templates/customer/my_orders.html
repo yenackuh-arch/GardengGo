@@ -1,0 +1,24 @@
+{% extends 'customer/base.html' %}
+{% from 'customer/_macros.html' import status_badge %}
+{% block title %}My Orders | GardenGo{% endblock %}
+{% block content %}
+  <section class="page-banner"><div class="container"><h1>My orders</h1><p>Everything you have ordered from Gripalda's Garden.</p></div></section>
+  <section class="section container">
+    {% if not orders %}
+    <div class="card cart-empty"><p class="cart-empty-icon" aria-hidden="true">&#128230;</p><h2>No orders yet</h2>
+      <p class="muted">When you place an order, it will show up here.</p><p><a href="{{ url_for('shop.plants') }}" class="btn">Browse plants</a></p></div>
+    {% else %}
+    <div class="orders-list">
+      {% for o in orders %}
+      {% set n = o['items']|sum(attribute='quantity') %}
+      <article class="card order-card">
+        <div class="oc-head"><div><h3>{{ order_code(o.id) }}</h3><p class="muted">Placed {{ o.created_at|date_fmt }} &middot; {{ n }} item{{ 's' if n > 1 }}</p></div>{{ status_badge(o) }}</div>
+        <p class="oc-items">{% for i in o['items'] %}{{ i.plant_name }} &times; {{ i.quantity }}{{ ', ' if not loop.last }}{% endfor %}</p>
+        <div class="oc-foot"><strong class="oc-total">{{ o.total_amount|peso }}</strong>
+          <div class="oc-actions"><a class="btn btn-small btn-outline" href="{{ url_for('account.order_details', order_id=o.id) }}">View details</a><a class="btn btn-small" href="{{ url_for('account.track', id=order_code(o.id)) }}">Track</a></div></div>
+      </article>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </section>
+{% endblock %}

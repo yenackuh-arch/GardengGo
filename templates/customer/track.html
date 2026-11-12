@@ -1,0 +1,26 @@
+{% extends 'customer/base.html' %}
+{% from 'customer/_macros.html' import status_badge, timeline, items_table, totals %}
+{% block title %}Track order | GardenGo{% endblock %}
+{% block content %}
+  <section class="page-banner"><div class="container"><h1>Track your order</h1><p>Enter an order ID from your account to see where it is.</p></div></section>
+  <section class="section container">
+    <form method="get" action="{{ url_for('account.track') }}" class="card form-card track-form" novalidate>
+      <div class="field{{ ' invalid' if error }}"><label for="orderId">Order ID</label>
+        <input type="text" id="orderId" name="id" value="{{ typed }}" list="orderIdList" placeholder="Example: GG-2001" maxlength="20" autocomplete="off">
+        <datalist id="orderIdList">{% for i in my_ids %}<option value="{{ order_code(i) }}">{% endfor %}</datalist>
+        <small class="error">{{ error }}</small></div>
+      <button type="submit" class="btn">Track order</button>
+    </form>
+    {% if order %}
+    <div class="track-result">
+      <div class="card detail-card">
+        <div class="oc-head"><div><h2>Order {{ order_code(order.id) }}</h2><p class="muted">Order date: {{ order.created_at|date_fmt }} &middot; {{ 'Local delivery' if order.fulfillment == 'delivery' else "Pickup at Gripalda's Garden" }}</p></div>{{ status_badge(order) }}</div>
+        <p class="current-status">Current status: <strong>{{ status_label(order) }}</strong></p>
+        {{ timeline(order) }}
+        <h3>Ordered plants</h3>{{ items_table(order) }}{{ totals(order) }}
+        <p class="detail-actions"><a class="btn btn-outline" href="{{ url_for('account.order_details', order_id=order.id) }}">View full details</a></p>
+      </div>
+    </div>
+    {% endif %}
+  </section>
+{% endblock %}

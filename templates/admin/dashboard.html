@@ -1,0 +1,66 @@
+{% extends 'admin/base.html' %}
+{% from 'admin/_macros.html' import status_badge %}
+{% block title %}Dashboard{% endblock %}
+{% block heading %}Dashboard{% endblock %}
+{% block content %}
+{% set s = d.stats %}
+<p class="muted mb-3">Overview of Gripalda's Garden orders, customers, and stock. All numbers come from the database.</p>
+<section class="row g-3 mb-4" aria-label="Summary">
+  {% set cards = [
+    ('Total orders', s.orders, 'bi-receipt', s.cancelled ~ ' cancelled', false),
+    ('Total revenue', s.revenue|peso, 'bi-cash-coin', 'Cancelled orders excluded', false),
+    ('Customers', s.customers, 'bi-people', s.active_customers ~ ' active accounts', false),
+    ('Plants', s.plants, 'bi-flower1', s.unavailable ~ ' unavailable', false),
+    ('Pending orders', s.pending, 'bi-hourglass-split', 'Waiting for confirmation' if s.pending else 'All caught up', s.pending > 0),
+    ('Low-stock items', s.low_stock, 'bi-exclamation-triangle', (s.out_of_stock ~ ' out of stock') if s.out_of_stock else 'Running low', s.low_stock > 0)] %}
+  {% for label, value, icon, note, warn in cards %}
+  <div class="col-6 col-md-4 col-xxl-2"><div class="stat-card{{ ' warn' if warn }}">
+    <span class="stat-icon"><i class="bi {{ icon }}"></i></span>
+    <div><p class="stat-label">{{ label }}</p><p class="stat-value">{{ value }}</p><p class="stat-note">{{ note }}</p></div></div></div>
+  {% endfor %}
+</section>
+
+<div class="row g-3 mb-4">
+  <section class="col-12 col-xl-8"><div class="panel">
+    <div class="panel-head"><h2>Sales overview</h2>
+      <div class="btn-group btn-group-sm" role="group" aria-label="Chart range">
+        <a class="btn btn-outline-green {{ 'active' if d.days == 7 }}" href="{{ url_for('admin.dashboard', range=7) }}">7 days</a>
+        <a class="btn btn-outline-green {{ 'active' if d.days == 30 }}" href="{{ url_for('admin.dashboard', range=30) }}">30 days</a>
+      </div></div>
+    <div class="chart-wrap"><canvas id="salesChart" role="img" aria-label="Daily sales chart" data-chart='{{ d.chart|tojson }}'></canvas></div>
+    <p class="chart-note muted">{{ d.chart_total|peso }} in sales over the last {{ d.days }} days (cancelled orders excluded).</p>
+  </div></section>
+  <section class="col-12 col-xl-4"><div class="panel h-100">
+    <div class="panel-head"><h2>Popular plants</h2></div>
+    {% if d.popular %}
+    {% set top = d.popular[0].sold %}
+    <ol class="popular">{% for p in d.popular %}
+      <li><div class="pop-row"><span>{{ p.name }}</span><strong>{{ p.sold|int }} sold</strong></div><div class="pop-bar"><span style="width: {{ (p.sold * 100 / top)|round|int }}%"></span></div></li>
+    {% endfor %}</ol>
+    {% else %}<p class="muted">No sales yet.</p>{% endif %}
+  </div></section>
+</div>
+
+<div class="row g-3">
+  <section class="col-12 col-xl-8"><div class="panel">
+    <div class="panel-head"><h2>Recent orders</h2><a href="{{ url_for('admin.orders') }}" class="btn btn-sm btn-outline-green">All orders</a></div>
+    <div class="table-responsive"><table class="table table-hover align-middle mb-0">
+      <thead><tr><th>Order ID</th><th>Customer</th><th>Date</th><th class="text-end">Total</th><th>Status</th></tr></thead>
+      <tbody>
+      {% for o in d.recent %}
+        <tr><td class="fw-semibold"><a href="{{ url_for('admin.order_detail', order_id=o.id) }}">{{ order_code(o.id) }}</a></td><td>{{ o.customer }}</td><td>{{ o.created_at|date_fmt }}</td><td class="text-end">{{ o.total_amount|peso }}</td><td>{{ status_badge(o.status) }}</td></tr>
+      {% else %}<tr><td colspan="5" class="muted text-center py-4">No orders yet.</td></tr>{% endfor %}
+      </tbody></table></div>
+  </div></section>
+  <section class="col-12 col-xl-4"><div class="panel h-100">
+    <div class="panel-head"><h2>Low-stock alerts</h2><a href="{{ url_for('admin.inventory') }}" class="btn btn-sm btn-outline-green">Inventory</a></div>
+    <ul class="alert-list">
+      {% for p in d.low %}
+      <li><div><strong>{{ p.name }}</strong><br><small class="muted">{{ p.category }}</small></div>
+        <span class="stock-pill {{ 'out' if p.stock_quantity == 0 else 'low' }}">{{ 'Out of stock' if p.stock_quantity == 0 else 'Only ' ~ p.stock_quantity ~ ' left' }}</span></li>
+      {% else %}<li class="muted">All plants are well stocked.</li>{% endfor %}
+    </ul>
+  </div></section>
+</div>
+{% endblock %}
+{% block scripts %}<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>{% endblock %}

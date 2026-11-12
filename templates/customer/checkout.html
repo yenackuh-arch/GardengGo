@@ -1,0 +1,48 @@
+{% extends 'customer/base.html' %}
+{% from 'customer/_macros.html' import field, csrf %}
+{% block title %}Checkout | GardenGo{% endblock %}
+{% block content %}
+  <section class="page-banner"><div class="container"><h1>Checkout</h1><p>Confirm your details and place your order.</p></div></section>
+  <section class="section container">
+    <div class="order-layout">
+      <form method="post" action="{{ url_for('shop.checkout') }}" class="card form-card" novalidate>
+        {{ csrf() }}
+        <h2>Contact and receiving details</h2>
+        <div class="row">
+          {{ field('name', 'Full name', values.name, errors.name, maxlength=80, autocomplete='name') }}
+          {{ field('phone', 'Mobile number', values.phone, errors.phone, type='tel', maxlength=20, placeholder='09XXXXXXXXX', autocomplete='tel') }}
+        </div>
+        {{ field('address', 'Street address', values.address, errors.address, maxlength=120, placeholder='House no., street, barangay', autocomplete='street-address') }}
+        <div class="row">
+          {{ field('city', 'City / Municipality', values.city, errors.city, maxlength=60) }}
+          {{ field('province', 'Province', values.province, errors.province, maxlength=60) }}
+        </div>
+        <div class="field"><label for="fulfillment">Receiving method</label>
+          <select id="fulfillment" name="fulfillment">
+            <option value="pickup" {{ 'selected' if values.fulfillment != 'delivery' }}>Pickup at Gripalda's Garden (free)</option>
+            <option value="delivery" {{ 'selected' if values.fulfillment == 'delivery' }}>Local delivery (&#8369;80)</option>
+          </select></div>
+        <div class="field{{ ' invalid' if errors.notes }}"><label for="notes">Notes (optional)</label><textarea id="notes" name="notes" rows="3" maxlength="200">{{ values.notes }}</textarea><small class="error">{{ errors.notes or '' }}</small></div>
+        <p class="pay-note"><strong>Payment:</strong> pay in cash when you pick up or receive your order.</p>
+        {% if problems %}<div class="form-errors" role="alert"><strong>Please fix the following:</strong><ul>{% for p in problems %}<li>{{ p }}</li>{% endfor %}</ul></div>{% endif %}
+        <button type="submit" class="btn full" data-once>Place order</button>
+      </form>
+      <aside class="card summary" aria-label="Order summary">
+        <h2>Order summary</h2>
+        {% for l in lines %}
+        <div class="sum-item">
+          {% if l.plant.image_path %}<img src="{{ image_src(l.plant.image_path) }}" alt="{{ l.plant.name }}">{% else %}<span class="img-placeholder small" aria-hidden="true">&#127807;</span>{% endif %}
+          <div><strong>{{ l.plant.name }}</strong><span class="muted">{{ l.qty }} &times; {{ l.unit_price|peso }}</span></div>
+          <span class="line-total">{{ l.line_total|peso }}</span>
+        </div>
+        {% endfor %}
+        <dl class="totals" id="orderTotals" data-subtotal="{{ subtotal }}" data-fee="{{ config.DELIVERY_FEE }}">
+          <div><dt>Subtotal</dt><dd>{{ subtotal|peso }}</dd></div>
+          <div><dt>Delivery fee</dt><dd id="feeValue">{{ fee|peso }}</dd></div>
+          <div class="grand"><dt>Total</dt><dd id="totalValue">{{ total|peso }}</dd></div>
+        </dl>
+        <a href="{{ url_for('shop.cart') }}" class="btn btn-outline full">Edit cart</a>
+      </aside>
+    </div>
+  </section>
+{% endblock %}

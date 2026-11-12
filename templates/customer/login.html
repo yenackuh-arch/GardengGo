@@ -1,0 +1,22 @@
+{% extends 'customer/base.html' %}
+{% from 'customer/_macros.html' import csrf %}
+{% block title %}Login | GardenGo{% endblock %}
+{% block content %}
+  <section class="auth-wrap">
+    <div class="auth-card card">
+      <img class="auth-logo" src="{{ url_for('static', filename='img/logo.png') }}" width="112" height="112" alt="Gripalda's Garden logo">
+      <h1>Welcome back</h1>
+      <p class="muted">Log in to place and track your orders.</p>
+      <form method="post" action="{{ url_for('auth.login', next=request.args.get('next')) }}" novalidate>
+        {{ csrf() }}
+        <div class="field"><label for="email">Email</label><input type="email" id="email" name="email" value="{{ email }}" autocomplete="email" maxlength="120"></div>
+        <div class="field"><label for="password">Password</label>
+          <div class="pw-wrap"><input type="password" id="password" name="password" autocomplete="current-password"><button type="button" class="pw-toggle" id="pwToggle" aria-label="Show password">Show</button></div></div>
+        <p class="forgot-link"><a href="{{ url_for('auth.forgot_password') }}">Forgot your password?</a></p>
+        {% if error %}<p class="form-msg bad" role="alert">{{ error }}</p>{% endif %}
+        <button type="submit" class="btn full" data-once>Log in</button>
+      </form>
+      <p class="switch">New to GardenGo? <a href="{{ url_for('auth.register', next=request.args.get('next')) }}">Create an account</a></p>
+    </div>
+  </section>
+{% endblock %}

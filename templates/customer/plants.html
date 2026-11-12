@@ -1,0 +1,42 @@
+{% extends 'customer/base.html' %}
+{% from 'customer/_macros.html' import plant_card %}
+{% block title %}Plants | GardenGo{% endblock %}
+{% block content %}
+  <section class="page-banner"><div class="container"><h1>Our plants</h1><p>Search and filter plants available at Gripalda's Garden.</p></div></section>
+  <section class="section container">
+    <form method="get" action="{{ url_for('shop.plants') }}" class="toolbar" id="filterForm">
+      <label class="visually-hidden" for="searchInput">Search plants</label>
+      <input type="search" id="searchInput" name="q" value="{{ q }}" placeholder="Search plants by name..." autocomplete="off" maxlength="60">
+      <input type="hidden" name="category" value="{{ category }}">
+      <div class="filters" role="group" aria-label="Filter by category">
+        <a class="chip {{ 'active' if not category }}" href="{{ url_for('shop.plants', q=q or None, availability=availability or None, sort=sort or None) }}">All</a>
+        {% for c in categories %}
+        <a class="chip {{ 'active' if category == c.name }}" href="{{ url_for('shop.plants', q=q or None, category=c.name, availability=availability or None, sort=sort or None) }}">{{ c.name }}</a>
+        {% endfor %}
+      </div>
+      <div class="selects">
+        <label class="visually-hidden" for="availFilter">Availability</label>
+        <select id="availFilter" name="availability" data-autosubmit>
+          <option value="">All availability</option>
+          <option value="in" {{ 'selected' if availability == 'in' }}>In stock</option>
+          <option value="out" {{ 'selected' if availability == 'out' }}>Out of stock</option>
+        </select>
+        <label class="visually-hidden" for="sortSelect">Sort by</label>
+        <select id="sortSelect" name="sort" data-autosubmit>
+          <option value="">Sort: Featured</option>
+          <option value="name-asc" {{ 'selected' if sort == 'name-asc' }}>Name: A to Z</option>
+          <option value="name-desc" {{ 'selected' if sort == 'name-desc' }}>Name: Z to A</option>
+          <option value="price-asc" {{ 'selected' if sort == 'price-asc' }}>Price: low to high</option>
+          <option value="price-desc" {{ 'selected' if sort == 'price-desc' }}>Price: high to low</option>
+        </select>
+        <button type="submit" class="btn btn-small">Search</button>
+      </div>
+    </form>
+    <p id="resultCount" class="muted" aria-live="polite">Showing {{ plants|length }} of {{ total }} plants</p>
+    {% if plants %}
+    <div class="grid" id="plantGrid">{% for p in plants %}{{ plant_card(p) }}{% endfor %}</div>
+    {% else %}
+    <p id="noResults" class="center muted">{% if total == 0 %}Our plants are coming soon. Please check back later.{% else %}No plants match your search. Try another name or filter.{% endif %}</p>
+    {% endif %}
+  </section>
+{% endblock %}

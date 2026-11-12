@@ -1,0 +1,45 @@
+{% extends 'admin/base.html' %}
+{% from 'admin/_macros.html' import csrf, stock_pill, empty %}
+{% block title %}Plants{% endblock %}
+{% block heading %}Plants{% endblock %}
+{% block content %}
+<p class="muted mb-3">Add, edit, and manage the plants shown on the customer website.</p>
+<div class="panel mb-3">
+  <form method="get" action="{{ url_for('admin.plants') }}" class="toolbar toolbar-plants">
+    <div class="toolbar-search"><label for="q" class="visually-hidden">Search plants</label><i class="bi bi-search" aria-hidden="true"></i>
+      <input type="search" id="q" name="q" value="{{ q }}" class="form-control" placeholder="Search plants by name" maxlength="60"></div>
+    <div><label for="category" class="visually-hidden">Category</label><select id="category" name="category" class="form-select" data-autosubmit>
+      <option value="">All categories</option>{% for c in categories %}<option value="{{ c.id }}" {{ 'selected' if category_id == c.id }}>{{ c.name }}</option>{% endfor %}</select></div>
+    <div><label for="availability" class="visually-hidden">Availability</label><select id="availability" name="availability" class="form-select" data-autosubmit>
+      <option value="">All availability</option>
+      {% for v, l in [('available','Available'),('unavailable','Unavailable'),('low','Low stock'),('out','Out of stock')] %}<option value="{{ v }}" {{ 'selected' if availability == v }}>{{ l }}</option>{% endfor %}</select></div>
+    <div><label for="sort" class="visually-hidden">Sort by</label><select id="sort" name="sort" class="form-select" data-autosubmit>
+      {% for v, l in [('name-asc','Name: A to Z'),('name-desc','Name: Z to A'),('price-asc','Price: low to high'),('price-desc','Price: high to low'),('stock-asc','Stock: low to high')] %}<option value="{{ v }}" {{ 'selected' if sort == v }}>{{ l }}</option>{% endfor %}</select></div>
+    <button type="submit" class="btn btn-light">Search</button>
+    <a href="{{ url_for('admin.plant_new') }}" class="btn btn-green"><i class="bi bi-plus-lg"></i> Add plant</a>
+  </form>
+  {% if not categories %}<p class="text-danger small mt-2 mb-0">There are no categories yet, so plants cannot be added. Add categories in the database first (see README_SETUP.md).</p>{% endif %}
+</div>
+<div class="panel">
+  <p class="muted small mb-2" aria-live="polite">Showing {{ plants|length }} of {{ total }} plants</p>
+  <div class="table-responsive"><table class="table table-hover align-middle mb-0">
+    <thead><tr><th>Photo</th><th>Plant</th><th>Category</th><th class="text-end">Price</th><th>Stock</th><th>Available</th><th class="text-end">Actions</th></tr></thead>
+    <tbody>
+    {% for p in plants %}
+      <tr {% if not p.is_available %}class="row-off"{% endif %}>
+        <td>{% if p.image_path %}<img class="thumb" src="{{ image_src(p.image_path) }}" alt="{{ p.name }}" loading="lazy">{% else %}<span class="thumb thumb-ph" aria-hidden="true">&#127793;</span>{% endif %}</td>
+        <td><div class="fw-semibold">{{ p.name }}</div><div class="muted small desc-cut">{{ p.description }}</div></td>
+        <td>{{ p.category }}</td><td class="text-end">{{ p.price|peso }}</td><td>{{ stock_pill(p.stock_quantity) }}</td>
+        <td><form method="post" action="{{ url_for('admin.plant_toggle', plant_id=p.id) }}" class="inline-form">{{ csrf() }}
+          <input type="hidden" name="available" value="{{ 0 if p.is_available else 1 }}"><input type="hidden" name="next" value="{{ request.full_path.rstrip('?') }}">
+          <button type="submit" class="btn btn-sm {{ 'btn-outline-secondary' if p.is_available else 'btn-outline-green' }}">{{ 'Hide' if p.is_available else 'Show' }}</button></form>
+          <span class="small {{ 'text-success' if p.is_available else 'muted' }}">{{ 'Available' if p.is_available else 'Unavailable' }}</span></td>
+        <td class="text-end text-nowrap"><a class="btn btn-sm btn-outline-green" href="{{ url_for('admin.plant_edit', plant_id=p.id) }}"><i class="bi bi-pencil"></i> Edit</a>
+          <form method="post" action="{{ url_for('admin.plant_delete', plant_id=p.id) }}" class="inline-form" data-confirm="Delete {{ p.name }}? This cannot be undone.">{{ csrf() }}
+            <button type="submit" class="btn btn-sm btn-outline-danger" aria-label="Delete {{ p.name }}"><i class="bi bi-trash"></i></button></form></td>
+      </tr>
+    {% endfor %}
+    </tbody></table></div>
+  {% if not plants %}{% if total %}{{ empty('No plants match your search.') }}{% else %}<div class="empty-msg"><p class="fw-semibold mb-1">No plants yet.</p><p class="muted mb-0">Click "Add plant" to add your first one.</p></div>{% endif %}{% endif %}
+</div>
+{% endblock %}

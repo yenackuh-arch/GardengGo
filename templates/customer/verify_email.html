@@ -1,0 +1,21 @@
+{% extends 'customer/base.html' %}
+{% from 'customer/_macros.html' import csrf %}
+{% block title %}Confirm your email | GardenGo{% endblock %}
+{% block content %}
+  <section class="auth-wrap">
+    <div class="auth-card card">
+      <img class="auth-logo" src="{{ url_for('static', filename='img/logo.png') }}" width="112" height="112" alt="Gripalda's Garden logo">
+      <h1>Confirm your email</h1>
+      <p class="muted">We sent a 6-digit code to <strong>{{ masked }}</strong>. It works for {{ minutes }} minutes.</p>
+      <form method="post" action="{{ url_for('auth.verify_email') }}" novalidate>
+        {{ csrf() }}
+        <div class="field{{ ' invalid' if error }}"><label for="code">6-digit code</label>
+          <input type="text" id="code" name="code" class="otp-input" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" placeholder="123456" required autofocus>
+          <small class="error">{{ error }}</small></div>
+        <button type="submit" class="btn full" data-once>Confirm</button>
+      </form>
+      <form method="post" action="{{ url_for('auth.verify_email_resend') }}" class="resend-form">{{ csrf() }}
+        <p class="switch">Did not get it? Check your spam folder, or <button type="submit" class="link-plain">send a new code</button>.</p></form>
+    </div>
+  </section>
+{% endblock %}

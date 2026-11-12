@@ -1,0 +1,37 @@
+{% extends 'admin/base.html' %}
+{% from 'admin/_macros.html' import csrf %}
+{% block title %}{{ 'Edit plant' if plant else 'Add plant' }}{% endblock %}
+{% block heading %}{{ 'Edit plant' if plant else 'Add plant' }}{% endblock %}
+{% block content %}
+<p class="mb-3"><a href="{{ url_for('admin.plants') }}">&larr; Back to plants</a></p>
+<div class="panel form-panel">
+  <form method="post" enctype="multipart/form-data" novalidate action="{{ url_for('admin.plant_edit', plant_id=plant.id) if plant else url_for('admin.plant_new') }}">
+    {{ csrf() }}
+    <div class="mb-3"><label for="name" class="form-label">Plant name</label>
+      <input type="text" id="name" name="name" value="{{ values.name }}" maxlength="60" class="form-control {{ 'is-invalid' if errors.name }}">
+      <div class="invalid-feedback">{{ errors.name }}</div></div>
+    <div class="row g-3 mb-3">
+      <div class="col-12 col-sm-4"><label for="category_id" class="form-label">Category</label>
+        <select id="category_id" name="category_id" class="form-select {{ 'is-invalid' if errors.category_id }}"><option value="">Choose...</option>
+          {% for c in categories %}<option value="{{ c.id }}" {{ 'selected' if values.category_id == c.id }}>{{ c.name }}</option>{% endfor %}</select>
+        <div class="invalid-feedback">{{ errors.category_id }}</div></div>
+      <div class="col-6 col-sm-4"><label for="price" class="form-label">Price (&#8369;)</label>
+        <input type="text" inputmode="decimal" id="price" name="price" value="{{ values.price }}" class="form-control {{ 'is-invalid' if errors.price }}">
+        <div class="invalid-feedback">{{ errors.price }}</div></div>
+      <div class="col-6 col-sm-4"><label for="stock" class="form-label">Stock</label>
+        <input type="text" inputmode="numeric" id="stock" name="stock" value="{{ values.stock }}" class="form-control {{ 'is-invalid' if errors.stock }}">
+        <div class="invalid-feedback">{{ errors.stock }}</div></div>
+    </div>
+    {% if plant %}<p class="muted small">Changing the price does not change past orders. They keep the price at the time of purchase. Changing the stock here is saved in the stock history as a "Correction".</p>{% endif %}
+    <div class="mb-3"><label for="description" class="form-label">Description</label>
+      <textarea id="description" name="description" rows="3" maxlength="300" class="form-control {{ 'is-invalid' if errors.description }}">{{ values.description }}</textarea>
+      <div class="invalid-feedback">{{ errors.description }}</div></div>
+    <div class="mb-3"><label for="image" class="form-label">Photo <span class="muted">(JPG, PNG or WebP, up to 10 MB)</span></label>
+      <div class="img-row"><div class="img-preview" id="imgPreview">{% if plant and plant.image_path %}<img src="{{ image_src(plant.image_path) }}" alt="Current photo" class="thumb-lg">{% else %}<span>&#127793;</span>{% endif %}</div>
+        <input type="file" id="image" name="image" accept="image/jpeg,image/png,image/webp" class="form-control {{ 'is-invalid' if errors.image }}"></div>
+      <div class="invalid-feedback d-block">{{ errors.image }}</div></div>
+    <label class="check-row mb-4"><input type="checkbox" name="is_available" value="1" {{ 'checked' if values.is_available }}> Available to customers</label>
+    <div class="d-flex gap-2"><button type="submit" class="btn btn-green" data-once>Save plant</button><a href="{{ url_for('admin.plants') }}" class="btn btn-light">Cancel</a></div>
+  </form>
+</div>
+{% endblock %}

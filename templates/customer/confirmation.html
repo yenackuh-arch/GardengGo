@@ -1,0 +1,24 @@
+{% extends 'customer/base.html' %}
+{% from 'customer/_macros.html' import status_badge %}
+{% block title %}Order placed | GardenGo{% endblock %}
+{% block content %}
+  <section class="section container">
+    <article class="card confirm">
+      <p class="confirm-icon" aria-hidden="true">&#10003;</p>
+      <h1>Thank you for your order!</h1>
+      <p class="muted">We received your order. Please keep your order ID.</p>
+      <p class="order-id">{{ order_code(order.id) }}</p>
+      <dl class="totals confirm-totals">
+        <div><dt>Status</dt><dd>{{ status_badge(order) }}</dd></div>
+        <div><dt>Receiving</dt><dd>{{ 'Local delivery' if order.fulfillment == 'delivery' else "Pickup at Gripalda's Garden" }}</dd></div>
+        <div class="grand"><dt>Total</dt><dd>{{ order.total_amount|peso }}</dd></div>
+      </dl>
+      <p class="muted">Pay in cash when you {{ 'receive' if order.fulfillment == 'delivery' else 'pick up' }} your order.</p>
+      <div class="confirm-actions">
+        <a class="btn" href="{{ url_for('account.track', id=order_code(order.id)) }}">Track this order</a>
+        <a class="btn btn-outline" href="{{ url_for('account.order_details', order_id=order.id) }}">View order details</a>
+        <a class="btn btn-outline" href="{{ url_for('shop.plants') }}">Continue shopping</a>
+      </div>
+    </article>
+  </section>
+{% endblock %}

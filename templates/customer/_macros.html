@@ -1,0 +1,79 @@
+{# Small reusable pieces used by many pages #}
+
+{% macro field(id, label, value='', error='', type='text', maxlength='', placeholder='', autocomplete='', required=false) %}
+<div class="field{{ ' invalid' if error }}">
+  <label for="{{ id }}">{{ label }}</label>
+  <input type="{{ type }}" id="{{ id }}" name="{{ id }}" value="{{ value }}"
+    {% if maxlength %}maxlength="{{ maxlength }}"{% endif %}
+    {% if placeholder %}placeholder="{{ placeholder }}"{% endif %}
+    {% if autocomplete %}autocomplete="{{ autocomplete }}"{% endif %}>
+  <small class="error">{{ error }}</small>
+</div>
+{% endmacro %}
+
+{% macro csrf() %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endmacro %}
+
+{% macro plant_card(p) %}
+{% set s = stock_info(p.stock_quantity) %}
+{% set off = p.stock_quantity <= 0 %}
+<article class="card plant-card reveal">
+  <div class="plant-img">
+    <a class="plant-img-link" href="{{ url_for('shop.plant_detail', plant_id=p.id) }}" aria-label="View {{ p.name }}">
+      {% if p.image_path %}<img src="{{ image_src(p.image_path) }}" alt="{{ p.name }}" loading="lazy">{% else %}<span class="img-placeholder" aria-hidden="true">&#127807;</span>{% endif %}
+    </a>
+    <span class="badge {{ s[0] }}">{{ s[1] }}</span>
+  </div>
+  <div class="plant-body">
+    <h3><a href="{{ url_for('shop.plant_detail', plant_id=p.id) }}">{{ p.name }}</a></h3>
+    <p>{{ p.description }}</p>
+    <div class="price">{{ p.price|peso }}</div>
+    <form method="post" action="{{ url_for('shop.cart_add') }}" class="card-actions">
+      {{ csrf() }}
+      <input type="hidden" name="plant_id" value="{{ p.id }}">
+      <input type="hidden" name="next" value="{{ request.full_path.rstrip('?') }}">
+      <button type="submit" class="btn btn-outline" {{ 'disabled' if off }}>Add to Cart</button>
+      <button type="submit" class="btn" name="buy_now" value="1" {{ 'disabled' if off }}>Order Now</button>
+    </form>
+  </div>
+</article>
+{% endmacro %}
+
+{% macro status_badge(order) %}
+{% set cls = {'Pending':'st-pending','Confirmed':'st-confirmed','Processing':'st-processing','Ready for Pickup':'st-ready','Completed':'st-completed','Cancelled':'st-cancelled'}[order.status] %}
+<span class="status-badge {{ cls }}">{{ status_label(order) }}</span>
+{% endmacro %}
+
+{% macro timeline(order) %}
+{% if order.status == 'Cancelled' %}
+<div class="cancel-banner" role="status"><strong>&#10007; This order was cancelled.</strong> If you have questions, please contact Gripalda's Garden.</div>
+{% else %}
+{% set steps = ['Order placed', 'Order confirmed', 'Order processing', ('Ready for delivery' if order.fulfillment == 'delivery' else 'Ready for pickup'), 'Order completed'] %}
+{% set at = ['Pending','Confirmed','Processing','Ready for Pickup','Completed'].index(order.status) %}
+<ol class="timeline" aria-label="Order progress">
+  {% for label in steps %}
+  <li class="{{ 'done' if loop.index0 < at else ('current' if loop.index0 == at else '') }}"{% if loop.index0 == at %} aria-current="step"{% endif %}>
+    <span class="dot">{{ '&#10003;'|safe if loop.index0 < at else loop.index }}</span><span class="tl-label">{{ label }}</span>
+  </li>
+  {% endfor %}
+</ol>
+{% endif %}
+{% endmacro %}
+
+{% macro items_table(order) %}
+<div class="table-wrap"><table class="items-table">
+  <thead><tr><th>Plant</th><th class="num">Price</th><th class="num">Qty</th><th class="num">Total</th></tr></thead>
+  <tbody>
+  {% for i in order['items'] %}
+    <tr><td>{{ i.plant_name }}</td><td class="num">{{ i.unit_price|peso }}</td><td class="num">{{ i.quantity }}</td><td class="num">{{ (D(i.unit_price) * i.quantity)|peso }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table></div>
+{% endmacro %}
+
+{% macro totals(order) %}
+<dl class="totals">
+  <div><dt>Subtotal</dt><dd>{{ order.subtotal|peso }}</dd></div>
+  {% if D(order.delivery_fee) > 0 %}<div><dt>Delivery fee</dt><dd>{{ order.delivery_fee|peso }}</dd></div>{% endif %}
+  <div class="grand"><dt>Total</dt><dd>{{ order.total_amount|peso }}</dd></div>
+</dl>
+{% endmacro %}

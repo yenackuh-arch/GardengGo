@@ -1,0 +1,54 @@
+{% extends 'admin/base.html' %}
+{% from 'admin/_macros.html' import stock_pill, pages_nav, empty %}
+{% block title %}Inventory{% endblock %}
+{% block heading %}Inventory{% endblock %}
+{% block content %}
+<p class="muted mb-3">Check stock levels, fix stock counts, and see every stock movement.</p>
+<section class="row g-3 mb-3" aria-label="Inventory summary">
+  {% for label, value, icon, note, warn in [('Plants tracked', summary.plants, 'bi-flower1', '', false), ('Units in stock', '{:,}'.format(summary.units), 'bi-box-seam', 'All plants combined', false),
+     ('Low stock', summary.low, 'bi-exclamation-triangle', config.LOW_STOCK ~ ' or fewer left', summary.low > 0), ('Out of stock', summary.out_of_stock, 'bi-x-octagon', 'Customers cannot order these', summary.out_of_stock > 0)] %}
+  <div class="col-6 col-xl-3"><div class="stat-card{{ ' warn' if warn }}"><span class="stat-icon"><i class="bi {{ icon }}"></i></span>
+    <div><p class="stat-label">{{ label }}</p><p class="stat-value">{{ value }}</p><p class="stat-note">{{ note }}</p></div></div></div>
+  {% endfor %}
+</section>
+<div class="panel mb-3">
+  <form method="get" action="{{ url_for('admin.inventory') }}" class="toolbar toolbar-inv">
+    <div class="toolbar-search"><label for="q" class="visually-hidden">Search plants</label><i class="bi bi-search" aria-hidden="true"></i>
+      <input type="search" id="q" name="q" value="{{ q }}" class="form-control" placeholder="Search plants by name" maxlength="60"></div>
+    <div><label for="level" class="visually-hidden">Stock level</label><select id="level" name="level" class="form-select" data-autosubmit>
+      {% for v, l in [('','All stock levels'),('ok','In stock'),('low','Low stock'),('out','Out of stock')] %}<option value="{{ v }}" {{ 'selected' if level == v }}>{{ l }}</option>{% endfor %}</select></div>
+    <div><label for="sort" class="visually-hidden">Sort by</label><select id="sort" name="sort" class="form-select" data-autosubmit>
+      {% for v, l in [('name-asc','Name: A to Z'),('stock-asc','Stock: low to high'),('stock-desc','Stock: high to low')] %}<option value="{{ v }}" {{ 'selected' if sort == v }}>{{ l }}</option>{% endfor %}</select></div>
+  </form>
+</div>
+<div class="panel mb-4">
+  <div class="table-responsive"><table class="table table-hover align-middle mb-0">
+    <thead><tr><th>Plant</th><th>Category</th><th class="text-end">Stock</th><th>Last movement</th><th class="text-end">Actions</th></tr></thead>
+    <tbody>{% for p in rows %}
+      <tr><td><div class="fw-semibold">{{ p.name }}</div>{% if not p.is_available %}<span class="muted small">Unavailable to customers</span>{% endif %}</td><td>{{ p.category }}</td>
+        <td class="text-end">{{ stock_pill(p.stock_quantity) }}</td><td class="muted small">{{ p.last_movement|dt_fmt if p.last_movement else '-' }}</td>
+        <td class="text-end text-nowrap"><a class="btn btn-sm btn-outline-green" href="{{ url_for('admin.inventory_adjust', plant_id=p.id) }}"><i class="bi bi-sliders"></i> Adjust</a>
+          <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('admin.inventory', plant=p.id) }}#history"><i class="bi bi-clock-history"></i> History</a></td></tr>
+    {% endfor %}</tbody></table></div>
+  {% if not rows %}{{ empty('No plants match your search.') }}{% endif %}
+</div>
+<div class="panel" id="history">
+  <div class="panel-head"><h2>Stock movement history</h2>
+    <form method="get" action="{{ url_for('admin.inventory') }}" class="history-filters">
+      <input type="hidden" name="q" value="{{ q }}"><input type="hidden" name="level" value="{{ level }}"><input type="hidden" name="sort" value="{{ sort }}">
+      <label for="plant" class="visually-hidden">Plant</label><select id="plant" name="plant" class="form-select form-select-sm" data-autosubmit>
+        <option value="">All plants</option>{% for p in all_plants %}<option value="{{ p.id }}" {{ 'selected' if hist_plant == p.id }}>{{ p.name }}</option>{% endfor %}</select>
+      <label for="type" class="visually-hidden">Type</label><select id="type" name="type" class="form-select form-select-sm" data-autosubmit>
+        <option value="">All types</option>{% for k, v in movement_types.items() %}<option value="{{ k }}" {{ 'selected' if hist_type == k }}>{{ v }}</option>{% endfor %}</select>
+    </form></div>
+  <p class="muted small mb-2">{{ pager.total }} movement{{ 's' if pager.total != 1 }}</p>
+  <div class="table-responsive"><table class="table table-sm align-middle mb-0">
+    <thead><tr><th>Date</th><th>Plant</th><th>Type</th><th class="text-end">Change</th><th class="text-end">Balance</th><th>Note</th></tr></thead>
+    <tbody>{% for m in history %}
+      <tr><td class="text-nowrap">{{ m.created_at|dt_fmt }}</td><td>{{ m.plant }}</td><td>{{ movement_types[m.movement_type] }}</td>
+        <td class="text-end fw-semibold {{ 'chg-plus' if m.quantity_change > 0 else 'chg-minus' }}">{{ '+' if m.quantity_change > 0 }}{{ m.quantity_change }}</td><td class="text-end">{{ m.balance_after }}</td>
+        <td class="muted small">{% if m.order_id %}<a href="{{ url_for('admin.order_detail', order_id=m.order_id) }}">{{ order_code(m.order_id) }}</a> {% endif %}{{ m.note }}{% if m.by_admin %} <em>({{ m.by_admin }})</em>{% endif %}</td></tr>
+    {% else %}<tr><td colspan="6" class="muted text-center py-3">No stock movements found.</td></tr>{% endfor %}</tbody></table></div>
+  {{ pages_nav(pager, 'admin.inventory') }}
+</div>
+{% endblock %}

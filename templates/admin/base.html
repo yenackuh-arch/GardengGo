@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>{% block title %}Admin{% endblock %} | GardenGo Admin</title>
+  <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='img/favicon-32.png') }}">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/apple-touch-icon.png') }}">
+  <meta name="theme-color" content="#1B5E20">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+</head>
+<body class="admin">
+{% set ep = request.endpoint or '' %}
+{% set nav = [('admin.dashboard', 'Dashboard', 'bi-speedometer2', ('admin.dashboard',)),
+              ('admin.plants', 'Plants', 'bi-flower1', ('admin.plants', 'admin.plant_new', 'admin.plant_edit')),
+              ('admin.orders', 'Orders', 'bi-receipt', ('admin.orders', 'admin.order_detail')),
+              ('admin.inventory', 'Inventory', 'bi-box-seam', ('admin.inventory', 'admin.inventory_adjust')),
+              ('admin.customers', 'Customers', 'bi-people', ('admin.customers', 'admin.customer_detail'))] %}
+<aside id="sidebar" class="sidebar" aria-label="Sidebar">
+  <div class="side-brand"><img class="side-logo" src="{{ url_for('static', filename='img/logo-96.png') }}" width="40" height="40" alt=""> <span class="logo-text">Garden<b>Go</b></span> <small>Admin</small></div>
+  <nav class="side-nav" aria-label="Admin navigation">
+    {% for endpoint, label, icon, group in nav %}
+    <a class="side-link{{ ' active' if ep in group }}" href="{{ url_for(endpoint) }}"{% if ep in group %} aria-current="page"{% endif %}><i class="bi {{ icon }}"></i><span>{{ label }}</span></a>
+    {% endfor %}
+  </nav>
+  <div class="side-foot">Gripalda's Garden<br>Bay, Laguna<br><a href="{{ url_for('shop.home') }}" class="side-reset" style="text-decoration:none">View customer site</a></div>
+</aside>
+<div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+<div class="main">
+  <header class="topbar">
+    <button type="button" id="sidebarToggle" class="icon-btn" aria-label="Toggle navigation" aria-expanded="false" aria-controls="sidebar"><i class="bi bi-list"></i></button>
+    <h1 class="page-title">{% block heading %}Admin{% endblock %}</h1>
+    <span class="admin-chip"><i class="bi bi-person-circle"></i> {{ g.user.full_name }}</span>
+    <form method="post" action="{{ url_for('admin.logout') }}" class="logout-form"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="btn btn-sm btn-outline-green">Log out</button></form>
+  </header>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}<div class="flash-area" role="status">
+    {% for category, message in messages %}<div class="alert alert-{{ {'success':'success','error':'danger','warning':'warning','info':'info'}.get(category, 'info') }} mb-2">{{ message }}</div>{% endfor %}
+  </div>{% endif %}
+  {% endwith %}
+
+  <main class="content">
+  {% block content %}{% endblock %}
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+{% block scripts %}{% endblock %}
+<script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+</body>
+</html>

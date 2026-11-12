@@ -1,0 +1,24 @@
+{% extends 'admin/base.html' %}
+{% from 'admin/_macros.html' import csrf %}
+{% block title %}Adjust stock{% endblock %}
+{% block heading %}Adjust stock{% endblock %}
+{% block content %}
+<p class="mb-3"><a href="{{ url_for('admin.inventory') }}">&larr; Back to inventory</a></p>
+<div class="panel form-panel">
+  <p class="mb-3"><strong>{{ plant.name }}</strong><br><span class="muted">Current stock: {{ plant.stock_quantity }}</span></p>
+  <form method="post" action="{{ url_for('admin.inventory_adjust', plant_id=plant.id) }}" id="adjustForm" data-current="{{ plant.stock_quantity }}" novalidate>
+    {{ csrf() }}
+    <fieldset class="mb-3 mode-options"><legend class="form-label">What happened?</legend>
+      {% for v, l in [('restock', 'Restock (add plants)'), ('remove', 'Damaged or lost (remove plants)'), ('set', 'Correction (set the exact count)')] %}
+      <label><input type="radio" name="mode" value="{{ v }}" {{ 'checked' if values.mode == v }}> {{ l }}</label>{% endfor %}
+      {% if errors.mode %}<div class="text-danger small">{{ errors.mode }}</div>{% endif %}</fieldset>
+    <div class="mb-3"><label for="qty" class="form-label">Quantity <span class="muted">(for "exact count", type the number on the shelf)</span></label>
+      <input type="text" inputmode="numeric" id="qty" name="qty" value="{{ values.qty }}" class="form-control {{ 'is-invalid' if errors.qty }}">
+      <div class="invalid-feedback">{{ errors.qty }}</div><p class="muted small mt-1 mb-0" id="preview" aria-live="polite"></p></div>
+    <div class="mb-4"><label for="note" class="form-label">Reason / note <span class="muted">(required for removing plants and corrections)</span></label>
+      <input type="text" id="note" name="note" value="{{ values.note }}" maxlength="120" class="form-control {{ 'is-invalid' if errors.note }}" autocomplete="off">
+      <div class="invalid-feedback">{{ errors.note }}</div></div>
+    <div class="d-flex gap-2"><button type="submit" class="btn btn-green" data-once>Save adjustment</button><a href="{{ url_for('admin.inventory') }}" class="btn btn-light">Cancel</a></div>
+  </form>
+</div>
+{% endblock %}

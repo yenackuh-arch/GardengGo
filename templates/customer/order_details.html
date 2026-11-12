@@ -1,0 +1,22 @@
+{% extends 'customer/base.html' %}
+{% from 'customer/_macros.html' import status_badge, timeline, items_table, totals %}
+{% block title %}Order {{ order_code(order.id) }} | GardenGo{% endblock %}
+{% block content %}
+  <section class="page-banner"><div class="container"><h1>Order details</h1><p>Items, totals, and where your order is now.</p></div></section>
+  <section class="section container">
+    <p class="crumbs"><a href="{{ url_for('account.my_orders') }}">&larr; Back to My Orders</a></p>
+    <div class="card detail-card">
+      <div class="oc-head"><div><h2>Order {{ order_code(order.id) }}</h2><p class="muted">Placed {{ order.created_at|date_fmt }}</p></div>{{ status_badge(order) }}</div>
+      <div class="info-grid">
+        <div><h3>Receiving</h3>
+          <p>{{ 'Local delivery' if order.fulfillment == 'delivery' else "Pickup at Gripalda's Garden" }}<br>{{ order.contact_name }}<br>{{ order.contact_phone }}<br>{{ order.address }}, {{ order.city }}, {{ order.province }}</p>
+          {% if order.notes %}<p class="muted">Notes: {{ order.notes }}</p>{% endif %}</div>
+        <div><h3>Payment</h3><p>Cash when you {{ 'receive' if order.fulfillment == 'delivery' else 'pick up' }} your order.</p></div>
+      </div>
+      <h3>Items</h3>{{ items_table(order) }}{{ totals(order) }}
+      <p class="muted small">Prices are the prices when you placed the order.</p>
+      <h3>Progress</h3>{{ timeline(order) }}
+      <p class="detail-actions"><a class="btn" href="{{ url_for('account.track', id=order_code(order.id)) }}">Track this order</a></p>
+    </div>
+  </section>
+{% endblock %}

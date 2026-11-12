@@ -1,0 +1,27 @@
+{% extends 'admin/base.html' %}
+{% from 'admin/_macros.html' import csrf, status_badge %}
+{% block title %}{{ c.full_name }}{% endblock %}
+{% block heading %}Customer{% endblock %}
+{% block content %}
+<p class="mb-3"><a href="{{ url_for('admin.customers') }}">&larr; Back to customers</a></p>
+<div class="row g-3">
+  <section class="col-12 col-xl-4">
+    <div class="panel mb-3"><h2 class="h5">{{ c.full_name }}</h2>
+      <p class="mb-2">{{ c.email }}<br>{{ c.phone or 'No phone yet' }}<br>{% if c.address %}{{ c.address }}, {% endif %}{{ c.city or '' }}{% if c.province %}, {{ c.province }}{% endif %}</p>
+      <p class="mb-0 muted small">Registered {{ c.created_at|date_fmt }}</p></div>
+    <div class="panel"><h2 class="h6 text-uppercase muted">Account status</h2>
+      <p><span class="status-badge {{ 'st-completed' if c.is_active else 'st-cancelled' }}">{{ 'Active' if c.is_active else 'Deactivated' }}</span></p>
+      <form method="post" action="{{ url_for('admin.customer_toggle', user_id=c.id) }}" {% if c.is_active %}data-confirm="Deactivate {{ c.full_name }}'s account? They will not be able to log in or place orders."{% endif %}>
+        {{ csrf() }}<input type="hidden" name="active" value="{{ 0 if c.is_active else 1 }}">
+        <button type="submit" class="btn {{ 'btn-outline-danger' if c.is_active else 'btn-green' }}">{{ 'Deactivate account' if c.is_active else 'Reactivate account' }}</button></form></div>
+  </section>
+  <section class="col-12 col-xl-8"><div class="panel">
+    <div class="panel-head"><h2>Order history</h2><span class="muted small">{{ c.orders|length }} order{{ 's' if c.orders|length != 1 }}, {{ c.spent|peso }} spent</span></div>
+    {% if c.orders %}
+    <div class="table-responsive"><table class="table table-sm align-middle mb-0">
+      <thead><tr><th>Order ID</th><th>Date</th><th class="text-end">Total</th><th>Status</th></tr></thead>
+      <tbody>{% for o in c.orders %}<tr><td class="fw-semibold"><a href="{{ url_for('admin.order_detail', order_id=o.id) }}">{{ order_code(o.id) }}</a></td><td>{{ o.created_at|date_fmt }}</td><td class="text-end">{{ o.total_amount|peso }}</td><td>{{ status_badge(o.status) }}</td></tr>{% endfor %}</tbody></table></div>
+    {% else %}<p class="muted mb-0">This customer has not placed any orders yet.</p>{% endif %}
+  </div></section>
+</div>
+{% endblock %}

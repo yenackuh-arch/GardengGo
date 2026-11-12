@@ -1,0 +1,11 @@
+{% extends 'email/_layout.html' %}
+{% block content %}
+<h2 style="margin:0 0 12px;color:#1B5E20">Thank you, {{ name }}!</h2>
+<p>We received your order. Your order ID is:</p>
+<p style="font-size:24px;font-weight:bold;color:#1B5E20;background:#E8F5E9;padding:12px 16px;border-radius:10px;display:inline-block;margin:4px 0 16px">{{ code }}</p>
+{% include 'email/_order_table.html' %}
+<p style="margin-top:16px"><strong>Receiving:</strong> {{ 'Local delivery' if order.fulfillment == 'delivery' else "Pickup at Gripalda's Garden" }}<br>
+<strong>Name:</strong> {{ order.contact_name }}<br><strong>Mobile:</strong> {{ order.contact_phone }}<br><strong>Address:</strong> {{ order.address }}, {{ order.city }}, {{ order.province }}</p>
+<p><strong>Payment:</strong> cash when you {{ 'receive' if order.fulfillment == 'delivery' else 'pick up' }} your order.</p>
+<p style="margin:24px 0"><a href="{{ track_url }}" style="background:#2E7D32;color:#FFFFFF;padding:12px 24px;border-radius:999px;text-decoration:none;font-weight:bold">Track your order</a></p>
+{% endblock %}

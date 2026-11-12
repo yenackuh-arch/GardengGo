@@ -1,0 +1,29 @@
+{% extends 'customer/base.html' %}
+{% from 'customer/_macros.html' import field, csrf %}
+{% block title %}My account | GardenGo{% endblock %}
+{% block content %}
+  <section class="page-banner"><div class="container"><h1>My account</h1><p>Your details are used to fill in your orders faster.</p></div></section>
+  <section class="section container account-layout">
+    <form method="post" action="{{ url_for('account.account') }}" class="card form-card" novalidate>
+      {{ csrf() }}
+      <h2>Profile</h2>
+      <div class="field"><label for="email">Email</label><input type="email" id="email" value="{{ g.user.email }}" disabled><small class="muted">Your email cannot be changed here.</small></div>
+      <div class="row">
+        {{ field('name', 'Full name', values.name, errors.name, maxlength=80) }}
+        {{ field('phone', 'Mobile number', values.phone, errors.phone, type='tel', maxlength=20, placeholder='09XXXXXXXXX') }}
+      </div>
+      {{ field('address', 'Street address', values.address, errors.address, maxlength=120) }}
+      <div class="row">
+        {{ field('city', 'City / Municipality', values.city, errors.city, maxlength=60) }}
+        {{ field('province', 'Province', values.province, errors.province, maxlength=60) }}
+      </div>
+      <button type="submit" class="btn">Save changes</button>
+    </form>
+    <aside class="card summary" aria-label="Account summary">
+      <h2>Account</h2>
+      <dl class="totals"><div><dt>Member since</dt><dd>{{ g.user.created_at|date_fmt }}</dd></div><div><dt>Orders placed</dt><dd>{{ order_count }}</dd></div></dl>
+      <a href="{{ url_for('account.my_orders') }}" class="btn full">View my orders</a>
+      <form method="post" action="{{ url_for('auth.logout') }}">{{ csrf() }}<button type="submit" class="btn btn-outline full">Log out</button></form>
+    </aside>
+  </section>
+{% endblock %}

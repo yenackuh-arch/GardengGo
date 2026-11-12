@@ -1,0 +1,54 @@
+{% extends 'customer/base.html' %}
+{% from 'customer/_macros.html' import csrf %}
+{% block title %}Cart | GardenGo{% endblock %}
+{% block content %}
+  <section class="page-banner"><div class="container"><h1>Your cart</h1><p>Review your plants, change quantities, then continue to checkout.</p></div></section>
+  <section class="section container">
+    {% if not lines %}
+    <div class="card cart-empty">
+      <p class="cart-empty-icon" aria-hidden="true">&#127793;</p><h2>Your cart is empty</h2>
+      <p class="muted">Add a plant from our catalog and it will show up here.</p>
+      <p><a href="{{ url_for('shop.plants') }}" class="btn">Browse plants</a></p>
+    </div>
+    {% else %}
+    <div class="cart-layout">
+      <div class="card cart-list" aria-label="Cart items">
+        {% for l in lines %}
+        <article class="cart-item">
+          {% if l.plant.image_path %}<img src="{{ image_src(l.plant.image_path) }}" alt="{{ l.plant.name }}" loading="lazy">{% else %}<span class="img-placeholder small" aria-hidden="true">&#127807;</span>{% endif %}
+          <div><h3><a href="{{ url_for('shop.plant_detail', plant_id=l.plant.id) }}">{{ l.plant.name }}</a></h3><p class="unit">{{ l.unit_price|peso }} each</p>
+            {% if l.out %}<p class="cart-warn" role="alert">This plant is now out of stock. Please remove it to continue.</p>{% endif %}</div>
+          <div class="cart-side">
+            {% if not l.out %}
+            <form method="post" action="{{ url_for('shop.cart_update') }}" class="qty-form">
+              {{ csrf() }}<input type="hidden" name="plant_id" value="{{ l.plant.id }}">
+              <div class="qty">
+                <button type="button" data-step="-1" aria-label="Decrease quantity of {{ l.plant.name }}">&minus;</button>
+                <input type="number" name="qty" value="{{ l.qty }}" min="1" max="{{ l.max }}" aria-label="Quantity of {{ l.plant.name }}" data-autosubmit>
+                <button type="button" data-step="1" aria-label="Increase quantity of {{ l.plant.name }}">+</button>
+              </div>
+              <button type="submit" class="link-plain">Update</button>
+            </form>
+            <span class="line-total">{{ l.line_total|peso }}</span>
+            {% endif %}
+            <form method="post" action="{{ url_for('shop.cart_remove') }}">{{ csrf() }}<input type="hidden" name="plant_id" value="{{ l.plant.id }}"><button type="submit" class="link-btn" style="margin:0">Remove</button></form>
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+      <aside class="card summary" aria-label="Cart summary">
+        <h2>Cart summary</h2>
+        <dl class="totals">
+          <div><dt>Items</dt><dd>{{ lines|rejectattr('out')|sum(attribute='qty') }}</dd></div>
+          <div><dt>Subtotal</dt><dd>{{ subtotal|peso }}</dd></div>
+          <div class="grand"><dt>Total</dt><dd>{{ subtotal|peso }}</dd></div>
+        </dl>
+        <p class="muted">Delivery fee (&#8369;80) is added at checkout only if you choose local delivery. Pickup is free.</p>
+        <a href="{{ url_for('shop.checkout') }}" class="btn full {{ 'disabled' if blocked }}" {% if blocked %}aria-disabled="true"{% endif %}>Proceed to checkout</a>
+        <a href="{{ url_for('shop.plants') }}" class="btn btn-outline full">Continue shopping</a>
+        <form method="post" action="{{ url_for('shop.cart_clear') }}" data-confirm="Remove all plants from your cart?">{{ csrf() }}<button type="submit" class="link-btn">Clear cart</button></form>
+      </aside>
+    </div>
+    {% endif %}
+  </section>
+{% endblock %}
